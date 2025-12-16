@@ -1,0 +1,153 @@
+// Prisma schema for Timba Systems Product Management
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// PRODUCT MODEL
+// ============================================
+model Product {
+  itemCode             String   @id @map("item_code")
+  productGroup         String?  @map("product_group")
+  supplierDescription  String?  @map("supplier_description")
+  timbaDescription     String?  @map("timba_description")
+  piecesPerPackage     Int      @default(1) @map("pieces_per_package")
+  unitOfMeasure        String   @default("PZ") @map("unit_of_measure")
+  priceListGBP         Decimal  @default(0) @map("price_list_gbp") @db.Decimal(10, 4)
+  discount1Pct         Decimal  @default(0) @map("discount_1_pct") @db.Decimal(5, 2)
+  discount2Pct         Decimal  @default(0) @map("discount_2_pct") @db.Decimal(5, 2)
+  unitDiscountedPrice  Decimal  @default(0) @map("unit_discounted_price") @db.Decimal(10, 4)
+  transportCost        Decimal  @default(0) @map("transport_cost") @db.Decimal(10, 4)
+  markupPct            Decimal  @default(30) @map("markup_pct") @db.Decimal(5, 2)
+  marginPct            Decimal  @default(0) @map("margin_pct") @db.Decimal(5, 2)
+  sellingPriceUnit     Decimal  @default(0) @map("selling_price_unit") @db.Decimal(10, 4)
+  sellingPriceBox      Decimal  @default(0) @map("selling_price_box") @db.Decimal(10, 4)
+  netUnitWeightKg      Decimal  @default(0) @map("net_unit_weight_kg") @db.Decimal(10, 6)
+  weightPerBoxKg       Decimal  @default(0) @map("weight_per_box_kg") @db.Decimal(10, 6)
+  brand                String?
+  line                 String?
+  diameter             String?
+  length               String?
+  hsCode               String?  @map("hs_code")
+  eanCode              String?  @map("ean_code")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  stock      Stock?
+  orderItems OrderItem[]
+
+  @@map("products")
+}
+
+// ============================================
+// STOCK MODEL (1:1 with Product)
+// ============================================
+model Stock {
+  itemCode          String   @id @map("item_code")
+  quantityAvailable Int      @default(0) @map("quantity_available")
+  lastUpdated       DateTime @updatedAt @map("last_updated")
+
+  // Relations
+  product Product        @relation(fields: [itemCode], references: [itemCode], onDelete: Cascade)
+  history StockHistory[]
+
+  @@map("stock")
+}
+
+// ============================================
+// STOCK HISTORY MODEL (1:N with Stock)
+// ============================================
+model StockHistory {
+  id             Int      @id @default(autoincrement())
+  itemCode       String   @map("item_code")
+  quantityChange Int      @map("quantity_change")
+  quantityAfter  Int      @map("quantity_after")
+  changeType     String   @map("change_type") // "RECEIVE", "ADJUST", "SALE", "RETURN"
+  notes          String?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  // Relations
+  stock Stock @relation(fields: [itemCode], references: [itemCode], onDelete: Cascade)
+
+  @@index([itemCode])
+  @@map("stock_history")
+}
+
+// ============================================
+// ORDER MODEL
+// ============================================
+model Order {
+  id          Int      @id @default(autoincrement())
+  orderNumber String   @unique @map("order_number")
+  status      String   @default("DRAFT") // "DRAFT", "CONFIRMED", "COMPLETED", "CANCELLED"
+  totalValue  Decimal  @default(0) @map("total_value") @db.Decimal(12, 2)
+  totalWeight Decimal  @default(0) @map("total_weight") @db.Decimal(10, 3)
+  totalMargin Decimal  @default(0) @map("total_margin") @db.Decimal(12, 2)
+  totalItems  Int      @default(0) @map("total_items")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  items OrderItem[]
+
+  @@map("orders")
+}
+
+// ============================================
+// ORDER ITEM MODEL (1:N with Order)
+// ============================================
+model OrderItem {
+  id         Int     @id @default(autoincrement())
+  orderId    Int     @map("order_id")
+  itemCode   String  @map("item_code")
+  quantity   Int
+  unitPrice  Decimal @map("unit_price") @db.Decimal(10, 4)
+  lineTotal  Decimal @map("line_total") @db.Decimal(12, 2)
+  lineWeight Decimal @map("line_weight") @db.Decimal(10, 3)
+  lineMargin Decimal @map("line_margin") @db.Decimal(12, 2)
+  available  Boolean @default(true)
+
+  // Relations
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [itemCode], references: [itemCode])
+
+  @@index([orderId])
+  @@index([itemCode])
+  @@map("order_items")
+}
+
+// ============================================
+// PRICE IMPORT LOG MODEL
+// ============================================
+model PriceImportLog {
+  id              Int      @id @default(autoincrement())
+  filename        String
+  recordsImported Int      @map("records_imported")
+  recordsUpdated  Int      @map("records_updated")
+  importedAt      DateTime @default(now()) @map("imported_at")
+
+  @@map("price_import_logs")
+}
+
+// ============================================
+// SETTINGS MODEL
+// ============================================
+model Settings {
+  id                Int      @id @default(1)
+  defaultMarkupPct  Decimal  @default(30) @map("default_markup_pct") @db.Decimal(5, 2)
+  transportCost     Decimal  @default(0) @map("transport_cost") @db.Decimal(10, 4)
+  lowStockThreshold Int      @default(50) @map("low_stock_threshold")
+  rowsPerPage       Int      @default(20) @map("rows_per_page")
+  currencySymbol    String   @default("£") @map("currency_symbol")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
