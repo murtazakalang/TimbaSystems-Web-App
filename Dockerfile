@@ -35,5 +35,5 @@ ENV PORT=3000
 
 EXPOSE 3000
 
-# Run database migrations and start the app
-CMD ["sh", "-c", "npx prisma migrate deploy && node build"]
+# Run database sync and start the app
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss && node build"]

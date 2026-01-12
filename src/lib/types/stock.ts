@@ -5,7 +5,14 @@ export interface Stock {
 }
 
 export interface StockWithProduct extends Stock {
-    description: string | null;
+    supplierDescription: string | null;
+    piecesPerPackage: number;
+    priceListGBP: number;
+    discount1Pct: number;
+    costGBP: number;
+    trueCostGBP: number;
+    timbaDescription: string | null;
+    marginPct: number;
     sellingPrice: number;
     weight: number;
     status: 'in_stock' | 'low_stock' | 'out_of_stock';

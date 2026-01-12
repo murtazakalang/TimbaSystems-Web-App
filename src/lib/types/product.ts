@@ -33,11 +33,16 @@ export interface Product {
 
 export interface ProductListItem {
     itemCode: string;
-    timbaDescription: string | null;
     supplierDescription: string | null;
+    piecesPerPackage: number;
+    priceListGBP: number;
+    discount1Pct: number;
+    costGBP: number;
+    trueCostGBP: number;
+    timbaDescription: string | null;
+    marginPct: number;
     sellingPriceUnit: number;
     netUnitWeightKg: number;
-    brand: string | null;
     stockQuantity: number;
     stockStatus: 'in_stock' | 'low_stock' | 'out_of_stock';
 }

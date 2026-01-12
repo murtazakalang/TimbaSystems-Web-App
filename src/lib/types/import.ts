@@ -5,13 +5,18 @@ export interface ImportColumn {
 
 export interface ImportColumnMapping {
     itemCode: string;
+    supplierDescription?: string;
     description?: string;
     piecesPerPackage?: string;
     priceList?: string;
     discount?: string;
     discount2?: string;
+    cost?: string;
+    trueCost?: string;
+    margin?: string;
+    sellingPrice?: string;
     unitWeight?: string;
-    boxWeight?: string;
+    stockQuantity?: string;
     brand?: string;
     productGroup?: string;
     unitOfMeasure?: string;

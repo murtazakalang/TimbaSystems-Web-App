@@ -53,11 +53,16 @@ export async function getAllProducts(filters: ProductFilters = {}): Promise<Pagi
 
     const items: ProductListItem[] = products.map((p) => ({
         itemCode: p.itemCode,
-        timbaDescription: p.timbaDescription,
         supplierDescription: p.supplierDescription,
+        piecesPerPackage: p.piecesPerPackage,
+        priceListGBP: Number(p.priceListGBP),
+        discount1Pct: Number(p.discount1Pct),
+        costGBP: Number(p.costGBP),
+        trueCostGBP: Number(p.trueCostGBP),
+        timbaDescription: p.timbaDescription,
+        marginPct: Number(p.marginPct),
         sellingPriceUnit: Number(p.sellingPriceUnit),
         netUnitWeightKg: Number(p.netUnitWeightKg),
-        brand: p.brand,
         stockQuantity: p.stock?.quantityAvailable ?? 0,
         stockStatus: getStockStatus(p.stock?.quantityAvailable ?? 0),
     }));
@@ -125,6 +130,11 @@ export async function bulkUpsertProducts(
 
     for (const product of products) {
         try {
+            // Extract stock quantity from product data (it's not a Product field)
+            const stockQuantity = typeof product.stockQuantity === 'number' ? product.stockQuantity : 0;
+            // Remove stockQuantity from product data before upsert
+            const { stockQuantity: _, ...productData } = product;
+
             // Check if product exists
             const existing = await prisma.product.findUnique({
                 where: { itemCode: product.itemCode },
@@ -132,20 +142,29 @@ export async function bulkUpsertProducts(
 
             await prisma.product.upsert({
                 where: { itemCode: product.itemCode },
-                update: product,
-                create: product as Prisma.ProductCreateInput,
+                update: productData,
+                create: productData as Prisma.ProductCreateInput,
             });
 
             if (existing) {
                 results.updated++;
+
+                // Update stock quantity if it was provided
+                if (typeof product.stockQuantity === 'number') {
+                    await prisma.stock.upsert({
+                        where: { itemCode: product.itemCode },
+                        update: { quantityAvailable: stockQuantity },
+                        create: { itemCode: product.itemCode, quantityAvailable: stockQuantity },
+                    });
+                }
             } else {
                 results.created++;
 
-                // Create stock record for new products
+                // Create stock record for new products with provided quantity
                 await prisma.stock.create({
                     data: {
                         itemCode: product.itemCode,
-                        quantityAvailable: 0,
+                        quantityAvailable: stockQuantity,
                     },
                 });
             }

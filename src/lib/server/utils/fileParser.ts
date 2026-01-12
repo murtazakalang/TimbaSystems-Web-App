@@ -143,13 +143,18 @@ export async function parseFile(file: File): Promise<ParsedFileData> {
  */
 const COLUMN_NAME_MAPPINGS: Record<string, string[]> = {
     itemCode: ['item code', 'itemcode', 'product code', 'sku', 'code', 'article', 'article code'],
-    description: ['description', 'desc', 'name', 'product name', 'title', 'supplier description'],
-    piecesPerPackage: ['pieces per package', 'pcs', 'qty per box', 'units per pack', 'pack size'],
-    priceList: ['price', 'pricelist', 'price list', 'pricelist customer', 'unit price', 'list price'],
-    discount: ['discount', 'discount %', 'disc', 'disc %', 'discount1'],
+    supplierDescription: ['supplier description', 'supplier desc'],
+    description: ['description', 'desc', 'name', 'product name', 'title', 'timba description'],
+    piecesPerPackage: ['pieces per package', 'pcs', 'qty per box', 'units per pack', 'pack size', 'unity'],
+    priceList: ['price', 'pricelist', 'price list', 'pricelist customer', 'unit price', 'list price', 'price list (£)'],
+    discount: ['discount', 'discount %', 'disc', 'disc %', 'discount1', 'discount%'],
     discount2: ['discount 2', 'discount2', 'disc 2', 'discount 2 %'],
-    unitWeight: ['weight', 'unit weight', 'net weight', 'net unit weight', 'weight kg', 'net unit weight kg'],
-    boxWeight: ['box weight', 'weight per box', 'package weight', 'weight per box kg'],
+    cost: ['cost', 'cost (£)', 'cost gbp'],
+    trueCost: ['true cost', 'true cost (£)', 'truecost'],
+    margin: ['margin', 'margin %', 'margin%'],
+    sellingPrice: ['selling price', 'selling price (£)', 'sell price'],
+    unitWeight: ['weight', 'unit weight', 'net weight', 'net unit weight', 'weight kg', 'net unit weight kg', 'weight (kg)'],
+    stockQuantity: ['stock', 'stock quantity', 'qty', 'quantity', 'available'],
     brand: ['brand', 'manufacturer', 'vendor'],
     productGroup: ['product group', 'group', 'category', 'type'],
     unitOfMeasure: ['unit', 'uom', 'unit of measure', 'measure'],
@@ -218,7 +223,7 @@ function convertValue(field: string, value: unknown): unknown {
     const stringValue = String(value).trim();
 
     // Numeric fields
-    const numericFields = ['piecesPerPackage', 'priceList', 'discount', 'discount2', 'unitWeight', 'boxWeight'];
+    const numericFields = ['piecesPerPackage', 'priceList', 'discount', 'discount2', 'unitWeight', 'cost', 'trueCost', 'margin', 'sellingPrice', 'stockQuantity'];
     if (numericFields.includes(field)) {
         // Remove currency symbols and commas
         const cleaned = stringValue.replace(/[£$€,]/g, '').trim();

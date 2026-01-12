@@ -20,6 +20,10 @@
         return `£${price.toFixed(2)}`;
     }
 
+    function formatPercent(value: number): string {
+        return `${value.toFixed(0)}%`;
+    }
+
     function formatWeight(weight: number): string {
         return `${weight.toFixed(3)} kg`;
     }
@@ -121,94 +125,135 @@
 </script>
 
 <div class="stock-table-container">
-    <table class="stock-table">
-        <thead>
-            <tr>
-                <th class="col-code">Code</th>
-                <th class="col-description">Description</th>
-                <th class="col-qty">Quantity</th>
-                <th class="col-status">Status</th>
-                <th class="col-price">Selling Price</th>
-                <th class="col-weight">Weight</th>
-            </tr>
-        </thead>
-        <tbody>
-            {#if loading}
-                {#each Array(5) as _}
-                    <tr class="skeleton-row">
-                        <td><div class="skeleton"></div></td>
-                        <td><div class="skeleton skeleton-wide"></div></td>
-                        <td><div class="skeleton"></div></td>
-                        <td><div class="skeleton"></div></td>
-                        <td><div class="skeleton"></div></td>
-                        <td><div class="skeleton"></div></td>
-                    </tr>
-                {/each}
-            {:else if stocks.length === 0}
+    <div class="table-scroll">
+        <table class="stock-table">
+            <thead>
                 <tr>
-                    <td colspan="6" class="empty-state">
-                        <div class="empty-content">
-                            <span class="empty-icon">📋</span>
-                            <p>No stock records found</p>
-                            <span class="empty-hint"
-                                >Try adjusting your filters</span
-                            >
-                        </div>
-                    </td>
+                    <th class="col-code">Code</th>
+                    <th class="col-description">Supplier Description</th>
+                    <th class="col-unity">Unity</th>
+                    <th class="col-price">Price List (£)</th>
+                    <th class="col-percent">Discount%</th>
+                    <th class="col-price">Cost (£)</th>
+                    <th class="col-price">True Cost (£)</th>
+                    <th class="col-description">Description</th>
+                    <th class="col-percent">Margin %</th>
+                    <th class="col-price">Selling Price (£)</th>
+                    <th class="col-weight">Weight (kg)</th>
+                    <th class="col-qty">Stock</th>
                 </tr>
-            {:else}
-                {#each stocks as stock (stock.itemCode)}
-                    <tr
-                        class="data-row"
-                        class:editing={editingCode === stock.itemCode}
-                    >
-                        <td class="col-code">
-                            <span class="code">{stock.itemCode}</span>
-                        </td>
-                        <td class="col-description">
-                            {stock.description || "-"}
-                        </td>
-                        <td class="col-qty">
-                            {#if editingCode === stock.itemCode}
-                                <input
-                                    type="number"
-                                    class="qty-input"
-                                    bind:value={editValue}
-                                    onblur={() => handleBlur(stock)}
-                                    onkeydown={(e) => handleKeydown(e, stock)}
-                                    min="0"
-                                    disabled={savingCode === stock.itemCode}
-                                />
-                            {:else}
-                                <button
-                                    class="qty-display"
-                                    onclick={() => startEditing(stock)}
-                                    title="Click to edit"
+            </thead>
+            <tbody>
+                {#if loading}
+                    {#each Array(5) as _}
+                        <tr class="skeleton-row">
+                            {#each Array(12) as _}
+                                <td><div class="skeleton"></div></td>
+                            {/each}
+                        </tr>
+                    {/each}
+                {:else if stocks.length === 0}
+                    <tr>
+                        <td colspan="12" class="empty-state">
+                            <div class="empty-content">
+                                <span class="empty-icon">📋</span>
+                                <p>No stock records found</p>
+                                <span class="empty-hint"
+                                    >Try adjusting your filters</span
                                 >
-                                    {stock.quantityAvailable}
-                                </button>
-                            {/if}
-                        </td>
-                        <td class="col-status">
-                            <Badge variant={getStockBadgeVariant(stock.status)}>
-                                {getStockLabel(stock.status)}
-                            </Badge>
-                        </td>
-                        <td class="col-price">
-                            <span class="price"
-                                >{formatPrice(stock.sellingPrice)}</span
-                            >
-                        </td>
-                        <td class="col-weight">
-                            <span class="weight"
-                                >{formatWeight(stock.weight)}</span
-                            >
+                            </div>
                         </td>
                     </tr>
-                {/each}
-            {/if}
-        </tbody>
-    </table>
+                {:else}
+                    {#each stocks as stock (stock.itemCode)}
+                        <tr
+                            class="data-row"
+                            class:editing={editingCode === stock.itemCode}
+                        >
+                            <td class="col-code">
+                                <span class="code">{stock.itemCode}</span>
+                            </td>
+                            <td class="col-description">
+                                {stock.supplierDescription || "-"}
+                            </td>
+                            <td class="col-unity">
+                                <span class="mono"
+                                    >{stock.piecesPerPackage}</span
+                                >
+                            </td>
+                            <td class="col-price">
+                                <span class="mono"
+                                    >{formatPrice(stock.priceListGBP)}</span
+                                >
+                            </td>
+                            <td class="col-percent">
+                                <span class="mono"
+                                    >{formatPercent(stock.discount1Pct)}</span
+                                >
+                            </td>
+                            <td class="col-price">
+                                <span class="mono"
+                                    >{formatPrice(stock.costGBP)}</span
+                                >
+                            </td>
+                            <td class="col-price">
+                                <span class="mono"
+                                    >{formatPrice(stock.trueCostGBP)}</span
+                                >
+                            </td>
+                            <td class="col-description">
+                                {stock.timbaDescription || "-"}
+                            </td>
+                            <td class="col-percent">
+                                <span class="mono"
+                                    >{formatPercent(stock.marginPct)}</span
+                                >
+                            </td>
+                            <td class="col-price">
+                                <span class="price"
+                                    >{formatPrice(stock.sellingPrice)}</span
+                                >
+                            </td>
+                            <td class="col-weight">
+                                <span class="mono"
+                                    >{formatWeight(stock.weight)}</span
+                                >
+                            </td>
+                            <td class="col-qty">
+                                {#if editingCode === stock.itemCode}
+                                    <input
+                                        type="number"
+                                        class="qty-input"
+                                        bind:value={editValue}
+                                        onblur={() => handleBlur(stock)}
+                                        onkeydown={(e) =>
+                                            handleKeydown(e, stock)}
+                                        min="0"
+                                        disabled={savingCode === stock.itemCode}
+                                    />
+                                {:else}
+                                    <button
+                                        class="qty-display"
+                                        onclick={() => startEditing(stock)}
+                                        title="Click to edit"
+                                    >
+                                        {stock.quantityAvailable}
+                                    </button>
+                                    <Badge
+                                        variant={getStockBadgeVariant(
+                                            stock.status,
+                                        )}
+                                    >
+                                        {getStockLabel(stock.status)}
+                                    </Badge>
+                                {/if}
+                            </td>
+                        </tr>
+                    {/each}
+                {/if}
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <style>
@@ -219,8 +264,13 @@
         overflow: hidden;
     }
 
+    .table-scroll {
+        overflow-x: auto;
+    }
+
     .stock-table {
         width: 100%;
+        min-width: 1200px;
         border-collapse: collapse;
     }
 
@@ -234,17 +284,17 @@
         background: var(--color-primary);
         color: white;
         font-family: var(--font-display);
-        font-size: 12px;
+        font-size: 11px;
         font-weight: var(--font-semibold);
         text-transform: uppercase;
         letter-spacing: 0.02em;
-        padding: var(--space-3) var(--space-4);
+        padding: var(--space-2) var(--space-3);
         text-align: left;
         white-space: nowrap;
     }
 
     td {
-        padding: var(--space-3) var(--space-4);
+        padding: var(--space-2) var(--space-3);
         border-bottom: 1px solid var(--color-border);
         font-family: var(--font-body);
         font-size: var(--text-sm);
@@ -268,27 +318,40 @@
     }
 
     .col-code {
-        width: 120px;
+        width: 100px;
     }
 
     .col-description {
-        min-width: 200px;
+        min-width: 150px;
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .col-unity {
+        width: 60px;
+        text-align: center;
+    }
+
+    .col-price {
+        width: 90px;
+        text-align: right;
+    }
+
+    .col-percent {
+        width: 70px;
+        text-align: right;
+    }
+
+    .col-weight {
+        width: 90px;
+        text-align: right;
     }
 
     .col-qty {
-        width: 100px;
+        width: 120px;
         text-align: center;
-    }
-
-    .col-status {
-        width: 80px;
-        text-align: center;
-    }
-
-    .col-price,
-    .col-weight {
-        width: 110px;
-        text-align: right;
     }
 
     .code {
@@ -297,10 +360,16 @@
         color: var(--color-accent);
     }
 
-    .price,
-    .weight {
+    .mono {
         font-family: var(--font-mono);
         font-size: var(--text-sm);
+    }
+
+    .price {
+        font-family: var(--font-mono);
+        font-size: var(--text-sm);
+        font-weight: var(--font-medium);
+        color: var(--color-success);
     }
 
     /* Editable quantity */
@@ -313,8 +382,9 @@
         border-radius: 4px;
         padding: var(--space-1) var(--space-2);
         cursor: pointer;
-        min-width: 60px;
+        min-width: 50px;
         transition: all var(--duration-fast) var(--ease-out);
+        margin-right: 4px;
     }
 
     .qty-display:hover {
@@ -370,7 +440,7 @@
 
     /* Loading skeleton */
     .skeleton-row td {
-        padding: var(--space-4);
+        padding: var(--space-3);
     }
 
     .skeleton {
@@ -384,11 +454,7 @@
         background-size: 200% 100%;
         animation: shimmer 1.5s infinite;
         border-radius: 4px;
-        width: 80px;
-    }
-
-    .skeleton-wide {
-        width: 160px;
+        width: 60px;
     }
 
     @keyframes shimmer {
@@ -397,19 +463,6 @@
         }
         100% {
             background-position: -200% 0;
-        }
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-        .col-weight {
-            display: none;
-        }
-    }
-
-    @media (max-width: 600px) {
-        .col-price {
-            display: none;
         }
     }
 </style>

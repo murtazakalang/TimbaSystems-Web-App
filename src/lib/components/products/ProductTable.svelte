@@ -25,6 +25,10 @@
         return `£${price.toFixed(2)}`;
     }
 
+    function formatPercent(value: number): string {
+        return `${value.toFixed(0)}%`;
+    }
+
     function formatWeight(weight: number): string {
         return `${weight.toFixed(3)} kg`;
     }
@@ -57,88 +61,109 @@
 </script>
 
 <div class="product-table-container">
-    <table class="product-table">
-        <thead>
-            <tr>
-                <th class="col-code">Code</th>
-                <th class="col-description">Description</th>
-                <th class="col-price">Price</th>
-                <th class="col-stock">Stock</th>
-                <th class="col-weight">Weight</th>
-                <th class="col-brand">Brand</th>
-            </tr>
-        </thead>
-        <tbody>
-            {#if loading}
-                {#each Array(5) as _}
-                    <tr class="skeleton-row">
-                        <td><div class="skeleton"></div></td>
-                        <td><div class="skeleton skeleton-wide"></div></td>
-                        <td><div class="skeleton"></div></td>
-                        <td><div class="skeleton"></div></td>
-                        <td><div class="skeleton"></div></td>
-                        <td><div class="skeleton"></div></td>
-                    </tr>
-                {/each}
-            {:else if products.length === 0}
+    <div class="table-scroll">
+        <table class="product-table">
+            <thead>
                 <tr>
-                    <td colspan="6" class="empty-state">
-                        <div class="empty-content">
-                            <span class="empty-icon">📦</span>
-                            <p>No products found</p>
-                            <span class="empty-hint"
-                                >Try adjusting your filters</span
-                            >
-                        </div>
-                    </td>
+                    <th class="col-code">Code</th>
+                    <th class="col-description">Supplier Description</th>
+                    <th class="col-unity">Unity</th>
+                    <th class="col-price">Price List (£)</th>
+                    <th class="col-percent">Discount%</th>
+                    <th class="col-price">Cost (£)</th>
+                    <th class="col-price">True Cost (£)</th>
+                    <th class="col-description">Description</th>
+                    <th class="col-percent">Margin %</th>
+                    <th class="col-price">Selling Price (£)</th>
+                    <th class="col-weight">Weight (kg)</th>
+                    <th class="col-stock">Stock</th>
                 </tr>
-            {:else}
-                {#each products as product (product.itemCode)}
-                    <tr
-                        class="data-row"
-                        onclick={() => handleRowClick(product)}
-                        onkeydown={(e) => handleKeydown(e, product)}
-                        tabindex="0"
-                        role="button"
-                    >
-                        <td class="col-code">
-                            <span class="code">{product.itemCode}</span>
-                        </td>
-                        <td class="col-description">
-                            {product.timbaDescription ||
-                                product.supplierDescription ||
-                                "-"}
-                        </td>
-                        <td class="col-price">
-                            <span class="price"
-                                >{formatPrice(product.sellingPriceUnit)}</span
-                            >
-                        </td>
-                        <td class="col-stock">
-                            <Badge
-                                variant={getStockBadgeVariant(
-                                    product.stockStatus,
-                                )}
-                            >
-                                {getStockLabel(
-                                    product.stockStatus,
-                                    product.stockQuantity,
-                                )}
-                            </Badge>
-                        </td>
-                        <td class="col-weight">
-                            <span class="weight"
-                                >{formatWeight(product.netUnitWeightKg)}</span
-                            >
-                        </td>
-                        <td class="col-brand">
-                            {product.brand || "-"}
+            </thead>
+            <tbody>
+                {#if loading}
+                    {#each Array(5) as _}
+                        <tr class="skeleton-row">
+                            {#each Array(12) as _}
+                                <td><div class="skeleton"></div></td>
+                            {/each}
+                        </tr>
+                    {/each}
+                {:else if products.length === 0}
+                    <tr>
+                        <td colspan="12" class="empty-state">
+                            <div class="empty-content">
+                                <span class="empty-icon">📦</span>
+                                <p>No products found</p>
+                                <span class="empty-hint"
+                                    >Try adjusting your filters</span
+                                >
+                            </div>
                         </td>
                     </tr>
-                {/each}
-            {/if}
-        </tbody>
-    </table>
+                {:else}
+                    {#each products as product (product.itemCode)}
+                        <tr
+                            class="data-row"
+                            onclick={() => handleRowClick(product)}
+                            onkeydown={(e) => handleKeydown(e, product)}
+                            tabindex="0"
+                            role="button"
+                        >
+                            <td class="col-code">
+                                <span class="code">{product.itemCode}</span>
+                            </td>
+                            <td class="col-description">
+                                {product.supplierDescription || "-"}
+                            </td>
+                            <td class="col-unity">
+                                <span class="mono">{product.piecesPerPackage}</span>
+                            </td>
+                            <td class="col-price">
+                                <span class="mono">{formatPrice(product.priceListGBP)}</span>
+                            </td>
+                            <td class="col-percent">
+                                <span class="mono">{formatPercent(product.discount1Pct)}</span>
+                            </td>
+                            <td class="col-price">
+                                <span class="mono">{formatPrice(product.costGBP)}</span>
+                            </td>
+                            <td class="col-price">
+                                <span class="mono">{formatPrice(product.trueCostGBP)}</span>
+                            </td>
+                            <td class="col-description">
+                                {product.timbaDescription || "-"}
+                            </td>
+                            <td class="col-percent">
+                                <span class="mono">{formatPercent(product.marginPct)}</span>
+                            </td>
+                            <td class="col-price">
+                                <span class="price"
+                                    >{formatPrice(product.sellingPriceUnit)}</span
+                                >
+                            </td>
+                            <td class="col-weight">
+                                <span class="mono"
+                                    >{formatWeight(product.netUnitWeightKg)}</span
+                                >
+                            </td>
+                            <td class="col-stock">
+                                <Badge
+                                    variant={getStockBadgeVariant(
+                                        product.stockStatus,
+                                    )}
+                                >
+                                    {getStockLabel(
+                                        product.stockStatus,
+                                        product.stockQuantity,
+                                    )}
+                                </Badge>
+                            </td>
+                        </tr>
+                    {/each}
+                {/if}
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <style>
@@ -149,8 +174,13 @@
         overflow: hidden;
     }
 
+    .table-scroll {
+        overflow-x: auto;
+    }
+
     .product-table {
         width: 100%;
+        min-width: 1200px;
         border-collapse: collapse;
     }
 
@@ -164,17 +194,17 @@
         background: var(--color-primary);
         color: white;
         font-family: var(--font-display);
-        font-size: 12px;
+        font-size: 11px;
         font-weight: var(--font-semibold);
         text-transform: uppercase;
         letter-spacing: 0.02em;
-        padding: var(--space-3) var(--space-4);
+        padding: var(--space-2) var(--space-3);
         text-align: left;
         white-space: nowrap;
     }
 
     td {
-        padding: var(--space-3) var(--space-4);
+        padding: var(--space-2) var(--space-3);
         border-bottom: 1px solid var(--color-border);
         font-family: var(--font-body);
         font-size: var(--text-sm);
@@ -200,26 +230,40 @@
     }
 
     .col-code {
-        width: 120px;
+        width: 100px;
     }
 
     .col-description {
-        min-width: 200px;
+        min-width: 150px;
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
-    .col-price,
+    .col-unity {
+        width: 60px;
+        text-align: center;
+    }
+
+    .col-price {
+        width: 90px;
+        text-align: right;
+    }
+
+    .col-percent {
+        width: 70px;
+        text-align: right;
+    }
+
     .col-weight {
-        width: 100px;
+        width: 90px;
         text-align: right;
     }
 
     .col-stock {
-        width: 120px;
+        width: 100px;
         text-align: center;
-    }
-
-    .col-brand {
-        width: 140px;
     }
 
     .code {
@@ -228,10 +272,16 @@
         color: var(--color-accent);
     }
 
-    .price,
-    .weight {
+    .mono {
         font-family: var(--font-mono);
         font-size: var(--text-sm);
+    }
+
+    .price {
+        font-family: var(--font-mono);
+        font-size: var(--text-sm);
+        font-weight: var(--font-medium);
+        color: var(--color-success);
     }
 
     /* Empty state */
@@ -265,7 +315,7 @@
 
     /* Loading skeleton */
     .skeleton-row td {
-        padding: var(--space-4);
+        padding: var(--space-3);
     }
 
     .skeleton {
@@ -279,11 +329,7 @@
         background-size: 200% 100%;
         animation: shimmer 1.5s infinite;
         border-radius: 4px;
-        width: 80px;
-    }
-
-    .skeleton-wide {
-        width: 160px;
+        width: 60px;
     }
 
     @keyframes shimmer {
@@ -292,19 +338,6 @@
         }
         100% {
             background-position: -200% 0;
-        }
-    }
-
-    /* Responsive */
-    @media (max-width: 900px) {
-        .col-brand {
-            display: none;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .col-weight {
-            display: none;
         }
     }
 </style>

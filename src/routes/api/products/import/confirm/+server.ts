@@ -34,9 +34,9 @@ export const POST: RequestHandler = async ({ request }) => {
 
         // Optional fields - only include if they are mapped
         const optionalFields: (keyof ImportColumnMapping)[] = [
-            'description', 'piecesPerPackage', 'priceList', 'discount',
-            'discount2', 'unitWeight', 'boxWeight', 'brand',
-            'productGroup', 'unitOfMeasure', 'hsCode', 'eanCode'
+            'supplierDescription', 'description', 'piecesPerPackage', 'priceList', 'discount',
+            'discount2', 'cost', 'trueCost', 'margin', 'sellingPrice', 'unitWeight',
+            'stockQuantity', 'brand', 'productGroup', 'unitOfMeasure', 'hsCode', 'eanCode'
         ];
 
         for (const field of optionalFields) {
@@ -52,22 +52,54 @@ export const POST: RequestHandler = async ({ request }) => {
             throw error(400, 'No valid rows to import. Ensure Item Code is mapped correctly.');
         }
 
-        // Map field names to Prisma model field names
-        const productsToUpsert = transformedData.map(row => ({
-            itemCode: String(row.itemCode),
-            supplierDescription: row.description ? String(row.description) : undefined,
-            piecesPerPackage: row.piecesPerPackage ? Number(row.piecesPerPackage) : undefined,
-            priceListGbp: row.priceList ? Number(row.priceList) : undefined,
-            discount1Pct: row.discount ? Number(row.discount) : undefined,
-            discount2Pct: row.discount2 ? Number(row.discount2) : undefined,
-            netUnitWeightKg: row.unitWeight ? Number(row.unitWeight) : undefined,
-            weightPerBoxKg: row.boxWeight ? Number(row.boxWeight) : undefined,
-            brand: row.brand ? String(row.brand) : undefined,
-            productGroup: row.productGroup ? String(row.productGroup) : undefined,
-            unitOfMeasure: row.unitOfMeasure ? String(row.unitOfMeasure) : undefined,
-            hsCode: row.hsCode ? String(row.hsCode) : undefined,
-            eanCode: row.eanCode ? String(row.eanCode) : undefined,
-        }));
+        // Map field names to Prisma model field names with calculations
+        const productsToUpsert = transformedData.map(row => {
+            // Get raw values with defaults
+            const piecesPerPackage = row.piecesPerPackage ? Number(row.piecesPerPackage) : 1;
+            const priceListGBP = row.priceList ? Number(row.priceList) : 0;
+            const discount1Pct = row.discount ? Number(row.discount) : 0;
+
+            // Calculate Cost: Unity × Price List × (1 - Discount%)
+            const costGBP = row.cost
+                ? Number(row.cost)
+                : Math.round((piecesPerPackage * priceListGBP * (1 - discount1Pct / 100)) * 100) / 100;
+
+            // True Cost defaults to Cost if not provided
+            const trueCostGBP = row.trueCost ? Number(row.trueCost) : costGBP;
+
+            // Margin defaults to 25%
+            const marginPct = row.margin ? Number(row.margin) : 25;
+
+            // Calculate Selling Price: True Cost / (1 - Margin%)
+            const sellingPriceUnit = row.sellingPrice
+                ? Number(row.sellingPrice)
+                : Math.round((trueCostGBP / (1 - marginPct / 100)) * 100) / 100;
+
+            // Description defaults to Supplier Description
+            const supplierDescription = row.supplierDescription ? String(row.supplierDescription) : undefined;
+            const timbaDescription = row.description ? String(row.description) : supplierDescription;
+
+            return {
+                itemCode: String(row.itemCode),
+                supplierDescription,
+                timbaDescription,
+                piecesPerPackage,
+                priceListGbp: priceListGBP,
+                discount1Pct,
+                discount2Pct: row.discount2 ? Number(row.discount2) : undefined,
+                costGbp: costGBP,
+                trueCostGbp: trueCostGBP,
+                marginPct,
+                sellingPriceUnit,
+                netUnitWeightKg: row.unitWeight ? Number(row.unitWeight) : 1.69, // Default: 1.69 kg
+                stockQuantity: row.stockQuantity ? Number(row.stockQuantity) : 0,
+                brand: row.brand ? String(row.brand) : undefined,
+                productGroup: row.productGroup ? String(row.productGroup) : undefined,
+                unitOfMeasure: row.unitOfMeasure ? String(row.unitOfMeasure) : undefined,
+                hsCode: row.hsCode ? String(row.hsCode) : undefined,
+                eanCode: row.eanCode ? String(row.eanCode) : undefined,
+            };
+        });
 
         // Perform bulk upsert
         const result = await bulkUpsertProducts(productsToUpsert);

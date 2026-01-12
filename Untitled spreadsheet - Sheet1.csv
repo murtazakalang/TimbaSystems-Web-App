@@ -1,0 +1,9 @@
+"Example - Main Table - to import - the only table that I can import into the app - in any updated information related to the code - the app automatically update the new information, otherwise keep all the same",,,,,,,,,,,
+*Code is the reference for all communucation and updates,If it is not available in imported file - defualt Empty,If it is not available in imported file - defualt Empty,If it is not available in imported file - defualt Empty,if not avaiable - default 0,Equation calcualted automatically - Unity*Price List*(1-Discount%) - Round Up two decimil,"If not meniotned in imported file, default equal Cost (£)",If not mentioned in imported file - default equal Supplier Description - this part to be shown in offer and other places,If not mentioned in imported file - default 25%,Automatically calculated equation - True Cost (£) / (1-Margin%) - Round up two decimil,If not meionted in imported file - default 1.69 kg,if not menionted in improted file default 0
+Code,Supplier Description,Unity,Price List (£),Discount%,Cost (£),True Cost (£),Description,Margin %,Selling Price (£),Weight (kg),Stock Quantity
+SNK5120,SNK WOOD SCREW 5X120,100,0.179,68,5.73,6.31,Holz Technic SNK Countersunk Timber Screws 5x120mm (Box of 100),35,9.71,5.73,3
+SNK550,SNK WOOD SCREW 5X50,200,0.07,65,4.9,5.39,Holz Technic SNK Countersunk Timber Screws 5x50mm (Box of 200),30,7.7,4.48,3
+SNK560,SNK WOOD SCREW 5X60,200,0.074,65,5.18,5.7,Holz Technic SNK Countersunk Timber Screws 5x60mm (Box of 200),30,8.15,4.736,2
+SNK570,SNK WOOD SCREW 5X70,100,0.097,65,3.4,3.74,Holz Technic SNK Countersunk Timber Screws 5x70mm (Box of 100),30,5.35,3.104,1
+SNK580,SNK WOOD SCREW 5X80,100,0.116,65,4.06,4.47,Holz Technic SNK Countersunk Timber Screws 5x80mm (Box of 100),30,6.39,3.712,2
+SNK590,SNK WOOD SCREW 5X90,100,0.125,65,4.38,4.82,Holz Technic SNK Countersunk Timber Screws 5x90mm (Box of 100),30,6.89,4,2

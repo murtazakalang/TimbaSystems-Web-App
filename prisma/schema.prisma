@@ -24,6 +24,8 @@ model Product {
   discount1Pct         Decimal  @default(0) @map("discount_1_pct") @db.Decimal(5, 2)
   discount2Pct         Decimal  @default(0) @map("discount_2_pct") @db.Decimal(5, 2)
   unitDiscountedPrice  Decimal  @default(0) @map("unit_discounted_price") @db.Decimal(10, 4)
+  costGBP              Decimal  @default(0) @map("cost_gbp") @db.Decimal(10, 4)
+  trueCostGBP          Decimal  @default(0) @map("true_cost_gbp") @db.Decimal(10, 4)
   transportCost        Decimal  @default(0) @map("transport_cost") @db.Decimal(10, 4)
   markupPct            Decimal  @default(30) @map("markup_pct") @db.Decimal(5, 2)
   marginPct            Decimal  @default(0) @map("margin_pct") @db.Decimal(5, 2)
