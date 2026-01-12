@@ -140,26 +140,21 @@ export async function parseFile(file: File): Promise<ParsedFileData> {
 
 /**
  * Map of common column names to system field names for auto-detection
+ * Only the 12 fields matching user's spreadsheet format
  */
 const COLUMN_NAME_MAPPINGS: Record<string, string[]> = {
-    itemCode: ['item code', 'itemcode', 'product code', 'sku', 'code', 'article', 'article code'],
+    itemCode: ['code', 'item code', 'itemcode', 'product code', 'sku', 'article', 'article code'],
     supplierDescription: ['supplier description', 'supplier desc'],
-    description: ['description', 'desc', 'name', 'product name', 'title', 'timba description'],
-    piecesPerPackage: ['pieces per package', 'pcs', 'qty per box', 'units per pack', 'pack size', 'unity'],
-    priceList: ['price', 'pricelist', 'price list', 'pricelist customer', 'unit price', 'list price', 'price list (£)'],
-    discount: ['discount', 'discount %', 'disc', 'disc %', 'discount1', 'discount%'],
-    discount2: ['discount 2', 'discount2', 'disc 2', 'discount 2 %'],
-    cost: ['cost', 'cost (£)', 'cost gbp'],
-    trueCost: ['true cost', 'true cost (£)', 'truecost'],
-    margin: ['margin', 'margin %', 'margin%'],
-    sellingPrice: ['selling price', 'selling price (£)', 'sell price'],
-    unitWeight: ['weight', 'unit weight', 'net weight', 'net unit weight', 'weight kg', 'net unit weight kg', 'weight (kg)'],
-    stockQuantity: ['stock', 'stock quantity', 'qty', 'quantity', 'available'],
-    brand: ['brand', 'manufacturer', 'vendor'],
-    productGroup: ['product group', 'group', 'category', 'type'],
-    unitOfMeasure: ['unit', 'uom', 'unit of measure', 'measure'],
-    hsCode: ['hs code', 'hscode', 'hs', 'tariff code'],
-    eanCode: ['ean', 'ean code', 'barcode', 'upc', 'gtin']
+    piecesPerPackage: ['unity', 'pieces per package', 'pcs', 'qty per box', 'units per pack', 'pack size'],
+    priceList: ['price list (£)', 'price list', 'pricelist', 'price', 'unit price', 'list price'],
+    discount: ['discount%', 'discount', 'discount %', 'disc', 'disc %'],
+    cost: ['cost (£)', 'cost', 'cost gbp'],
+    trueCost: ['true cost (£)', 'true cost', 'truecost'],
+    description: ['description', 'desc', 'name', 'product name', 'timba description'],
+    margin: ['margin %', 'margin', 'margin%'],
+    sellingPrice: ['selling price (£)', 'selling price', 'sell price'],
+    unitWeight: ['weight (kg)', 'weight', 'unit weight', 'net weight', 'net unit weight kg'],
+    stockQuantity: ['stock quantity', 'stock', 'qty', 'quantity', 'available'],
 };
 
 /**

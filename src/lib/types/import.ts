@@ -6,22 +6,16 @@ export interface ImportColumn {
 export interface ImportColumnMapping {
     itemCode: string;
     supplierDescription?: string;
-    description?: string;
     piecesPerPackage?: string;
     priceList?: string;
     discount?: string;
-    discount2?: string;
     cost?: string;
     trueCost?: string;
+    description?: string;
     margin?: string;
     sellingPrice?: string;
     unitWeight?: string;
     stockQuantity?: string;
-    brand?: string;
-    productGroup?: string;
-    unitOfMeasure?: string;
-    hsCode?: string;
-    eanCode?: string;
 }
 
 export interface ImportPreview {

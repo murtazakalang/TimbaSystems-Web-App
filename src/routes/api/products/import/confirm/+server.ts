@@ -32,11 +32,11 @@ export const POST: RequestHandler = async ({ request }) => {
         // Required field
         fullMapping['itemCode'] = mapping.itemCode;
 
-        // Optional fields - only include if they are mapped
+        // Optional fields - only include if they are mapped (12 fields total)
         const optionalFields: (keyof ImportColumnMapping)[] = [
-            'supplierDescription', 'description', 'piecesPerPackage', 'priceList', 'discount',
-            'discount2', 'cost', 'trueCost', 'margin', 'sellingPrice', 'unitWeight',
-            'stockQuantity', 'brand', 'productGroup', 'unitOfMeasure', 'hsCode', 'eanCode'
+            'supplierDescription', 'piecesPerPackage', 'priceList', 'discount',
+            'cost', 'trueCost', 'description', 'margin', 'sellingPrice',
+            'unitWeight', 'stockQuantity'
         ];
 
         for (const field of optionalFields) {
