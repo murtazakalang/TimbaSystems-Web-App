@@ -20,34 +20,40 @@
     let { onUpdated }: Props = $props();
 
     // Local editable state
-    let editedMarkup: number | null = $state(null);
-    let editedTransportCost: number | null = $state(null);
-    let editedTimbaDescription: string = $state("");
+    let editedMargin: number = $state(25);
     let isSaving = $state(false);
+
+    // Computed selling price based on margin
+    let computedSellingPrice = $derived(() => {
+        if (!$selectedProduct) return 0;
+        const trueCost =
+            Number($selectedProduct.trueCostGBP) ||
+            Number($selectedProduct.costGBP) ||
+            0;
+        const margin = editedMargin ?? Number($selectedProduct.marginPct) ?? 25;
+        if (margin >= 100) return trueCost; // Prevent division by zero
+        return trueCost / (1 - margin / 100);
+    });
 
     // Initialize local state when product changes
     $effect(() => {
         if ($selectedProduct) {
-            editedMarkup = $selectedProduct.markupPct
-                ? Number($selectedProduct.markupPct)
-                : null;
-            editedTransportCost = $selectedProduct.transportCost
-                ? Number($selectedProduct.transportCost)
-                : null;
-            editedTimbaDescription = $selectedProduct.timbaDescription || "";
+            editedMargin = $selectedProduct.marginPct
+                ? Number($selectedProduct.marginPct)
+                : 25;
         }
     });
 
-    function formatPrice(value: unknown): string {
+    function formatPrice(value: number | unknown): string {
         const num = Number(value);
         if (isNaN(num)) return "£0.00";
         return `£${num.toFixed(2)}`;
     }
 
-    function formatPercent(value: unknown): string {
+    function formatPercent(value: number | unknown): string {
         const num = Number(value);
         if (isNaN(num)) return "0%";
-        return `${num.toFixed(1)}%`;
+        return `${num.toFixed(0)}%`;
     }
 
     function formatWeight(value: unknown): string {
@@ -77,26 +83,15 @@
 
         const updates: Record<string, unknown> = {};
 
-        if (
-            editedMarkup !== null &&
-            editedMarkup !== Number($selectedProduct.markupPct)
-        ) {
-            updates.markupPct = editedMarkup;
-        }
-        if (
-            editedTransportCost !== null &&
-            editedTransportCost !== Number($selectedProduct.transportCost)
-        ) {
-            updates.transportCost = editedTransportCost;
-        }
-        if (
-            editedTimbaDescription !== ($selectedProduct.timbaDescription || "")
-        ) {
-            updates.timbaDescription = editedTimbaDescription;
+        // Only save margin if changed
+        if (editedMargin !== Number($selectedProduct.marginPct)) {
+            updates.marginPct = editedMargin;
+            // Also update the selling price based on new margin
+            updates.sellingPriceUnit = computedSellingPrice();
         }
 
         if (Object.keys(updates).length === 0) {
-            addToast({ type: "info", message: "No changes to save" });
+            addToast("No changes to save", "info");
             isSaving = false;
             return;
         }
@@ -107,16 +102,10 @@
         );
 
         if (success) {
-            addToast({
-                type: "success",
-                message: "Product updated successfully",
-            });
+            addToast("Product updated successfully", "success");
             onUpdated?.();
         } else {
-            addToast({
-                type: "error",
-                message: $productError || "Failed to update product",
-            });
+            addToast($productError || "Failed to update product", "error");
         }
 
         isSaving = false;
@@ -127,7 +116,7 @@
     }
 </script>
 
-<Modal open={$isProductModalOpen} onclose={handleClose} size="lg">
+<Modal open={$isProductModalOpen} onclose={handleClose} size="md">
     {#if $isProductLoading && !$selectedProduct}
         <div class="loading-state">
             <div class="spinner"></div>
@@ -146,119 +135,76 @@
             <span class="product-code">{$selectedProduct.itemCode}</span>
         </div>
 
-        <!-- Basic Info Section -->
+        <!-- Product Information -->
         <section class="info-section">
             <h3>Product Information</h3>
             <div class="info-grid">
                 <div class="info-item">
-                    <label>Item Code</label>
+                    <label>Code</label>
                     <span class="code-value">{$selectedProduct.itemCode}</span>
                 </div>
                 <div class="info-item">
-                    <label>Product Group</label>
-                    <span>{$selectedProduct.productGroup || "-"}</span>
+                    <label>Unity</label>
+                    <span>{$selectedProduct.piecesPerPackage || 1}</span>
                 </div>
                 <div class="info-item full-width">
-                    <label>Supplier Description</label>
-                    <span>{$selectedProduct.supplierDescription || "-"}</span>
-                </div>
-                <div class="info-item">
-                    <label>Brand</label>
-                    <span>{$selectedProduct.brand || "-"}</span>
-                </div>
-                <div class="info-item">
-                    <label>Pieces per Package</label>
-                    <span>{$selectedProduct.piecesPerPackage || "-"}</span>
-                </div>
-            </div>
-        </section>
-
-        <!-- Editable Fields Section -->
-        <section class="info-section editable-section">
-            <h3>Editable Fields</h3>
-            <div class="info-grid editable-grid">
-                <div class="info-item">
-                    <Input
-                        label="TIMBA Description"
-                        bind:value={editedTimbaDescription}
-                        placeholder="Custom product description"
-                    />
-                </div>
-                <div class="info-item">
-                    <Input
-                        label="Markup %"
-                        type="number"
-                        bind:value={editedMarkup}
-                    />
-                </div>
-                <div class="info-item">
-                    <Input
-                        label="Transport Cost (£)"
-                        type="number"
-                        bind:value={editedTransportCost}
-                    />
+                    <label>Description</label>
+                    <span
+                        >{$selectedProduct.supplierDescription ||
+                            $selectedProduct.timbaDescription ||
+                            "-"}</span
+                    >
                 </div>
             </div>
         </section>
 
         <!-- Pricing Section -->
-        <section class="info-section pricing-section">
-            <h3>Pricing Breakdown</h3>
+        <section class="info-section">
+            <h3>Pricing</h3>
             <div class="pricing-grid">
                 <div class="pricing-item">
-                    <label>Price List (GBP)</label>
-                    <span class="price"
-                        >{formatPrice($selectedProduct.priceListGbp)}</span
-                    >
+                    <label>Price List (Unity)</label>
+                    <span class="price-value">
+                        {formatPrice(
+                            ($selectedProduct.piecesPerPackage || 1) *
+                                Number($selectedProduct.priceListGBP || 0),
+                        )}
+                    </span>
+                    <span class="price-note">
+                        {$selectedProduct.piecesPerPackage || 1} × {formatPrice(
+                            $selectedProduct.priceListGBP,
+                        )}
+                    </span>
                 </div>
-                <div class="pricing-item">
-                    <label>Discount 1</label>
-                    <span>{formatPercent($selectedProduct.discount1Pct)}</span>
-                </div>
-                <div class="pricing-item">
-                    <label>Discount 2</label>
-                    <span>{formatPercent($selectedProduct.discount2Pct)}</span>
-                </div>
-                <div class="pricing-item">
-                    <label>Unit Discounted Price</label>
-                    <span class="price"
-                        >{formatPrice(
-                            $selectedProduct.unitDiscountedPrice,
-                        )}</span
-                    >
-                </div>
-                <div class="pricing-item highlight">
+                <div class="pricing-item editable">
                     <label>Margin %</label>
-                    <span class="price"
-                        >{formatPercent($selectedProduct.marginPct)}</span
-                    >
-                </div>
-                <div class="pricing-item highlight primary">
-                    <label>Selling Price (Unit)</label>
-                    <span class="price large"
-                        >{formatPrice($selectedProduct.sellingPriceUnit)}</span
-                    >
+                    <input
+                        type="number"
+                        class="margin-input"
+                        bind:value={editedMargin}
+                        min="0"
+                        max="99"
+                    />
                 </div>
                 <div class="pricing-item highlight">
-                    <label>Selling Price (Box)</label>
-                    <span class="price"
-                        >{formatPrice($selectedProduct.sellingPriceBox)}</span
+                    <label>Selling Price (£)</label>
+                    <span class="price-value large"
+                        >{formatPrice(computedSellingPrice())}</span
                     >
                 </div>
             </div>
         </section>
 
         <!-- Inventory & Weight Section -->
-        <section class="info-section inventory-section">
+        <section class="info-section">
             <h3>Inventory & Weight</h3>
             <div class="inventory-grid">
-                <div class="inventory-item stock-item">
-                    <label>Current Stock</label>
+                <div class="inventory-item">
+                    <label>Stock Quantity</label>
                     <div class="stock-display">
-                        <span class="stock-qty"
-                            >{$selectedProduct.stock?.quantityAvailable ??
-                                0}</span
-                        >
+                        <span class="stock-qty">
+                            {$selectedProduct.stock?.quantityAvailable ?? 0}
+                        </span>
                         <Badge
                             variant={getStockBadgeVariant(
                                 $selectedProduct.stock?.quantityAvailable ?? 0,
@@ -271,43 +217,10 @@
                     </div>
                 </div>
                 <div class="inventory-item">
-                    <label>Unit Weight</label>
+                    <label>Weight (kg)</label>
                     <span class="weight"
                         >{formatWeight($selectedProduct.netUnitWeightKg)}</span
                     >
-                </div>
-                <div class="inventory-item">
-                    <label>Box Weight</label>
-                    <span class="weight"
-                        >{formatWeight($selectedProduct.weightPerBoxKg)}</span
-                    >
-                </div>
-            </div>
-        </section>
-
-        <!-- Additional Info -->
-        <section class="info-section">
-            <h3>Additional Information</h3>
-            <div class="info-grid small">
-                <div class="info-item">
-                    <label>HS Code</label>
-                    <span class="code-value"
-                        >{$selectedProduct.hsCode || "-"}</span
-                    >
-                </div>
-                <div class="info-item">
-                    <label>EAN Code</label>
-                    <span class="code-value"
-                        >{$selectedProduct.eanCode || "-"}</span
-                    >
-                </div>
-                <div class="info-item">
-                    <label>Diameter</label>
-                    <span>{$selectedProduct.diameter || "-"}</span>
-                </div>
-                <div class="info-item">
-                    <label>Length</label>
-                    <span>{$selectedProduct.length || "-"}</span>
                 </div>
             </div>
         </section>
@@ -388,15 +301,7 @@
     }
 
     .info-section {
-        border-bottom: 1px solid var(--color-border);
-        padding-bottom: var(--space-4);
-        margin-bottom: var(--space-4);
-    }
-
-    .info-section:last-of-type {
-        border-bottom: none;
-        padding-bottom: 0;
-        margin-bottom: 0;
+        margin-bottom: var(--space-5);
     }
 
     .info-section h3 {
@@ -411,16 +316,8 @@
 
     .info-grid {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: 1fr 1fr;
         gap: var(--space-4);
-    }
-
-    .info-grid.small {
-        grid-template-columns: repeat(4, 1fr);
-    }
-
-    .editable-grid {
-        grid-template-columns: 1fr 1fr 1fr;
     }
 
     .info-item {
@@ -448,12 +345,13 @@
     .code-value {
         font-family: var(--font-mono);
         color: var(--color-accent) !important;
+        font-weight: var(--font-medium);
     }
 
     /* Pricing Section */
     .pricing-grid {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: 1fr 1fr 1fr;
         gap: var(--space-3);
     }
 
@@ -472,38 +370,57 @@
         text-transform: uppercase;
     }
 
-    .pricing-item .price {
-        font-family: var(--font-mono);
-        font-size: var(--text-sm);
-        font-weight: var(--font-medium);
+    .pricing-item.editable {
+        background: var(--color-accent-light);
+        border: 2px dashed var(--color-accent);
     }
 
     .pricing-item.highlight {
-        background: var(--color-accent-light);
-    }
-
-    .pricing-item.primary {
-        background: var(--color-accent);
+        background: var(--color-primary);
         color: white;
     }
 
-    .pricing-item.primary label {
+    .pricing-item.highlight label {
         color: rgba(255, 255, 255, 0.8);
     }
 
-    .pricing-item.primary .price {
-        color: white;
+    .price-value {
+        font-family: var(--font-mono);
+        font-size: var(--text-base);
+        font-weight: var(--font-medium);
     }
 
-    .pricing-item .price.large {
-        font-size: var(--text-lg);
+    .price-value.large {
+        font-size: var(--text-xl);
+    }
+
+    .price-note {
+        font-size: var(--text-xs);
+        color: var(--color-text-secondary);
+        font-family: var(--font-mono);
+    }
+
+    .margin-input {
+        width: 100%;
+        padding: var(--space-2);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        font-family: var(--font-mono);
+        font-size: var(--text-base);
+        text-align: center;
+    }
+
+    .margin-input:focus {
+        outline: none;
+        border-color: var(--color-accent);
+        box-shadow: 0 0 0 3px var(--color-accent-light);
     }
 
     /* Inventory Section */
     .inventory-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: var(--space-3);
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-4);
     }
 
     .inventory-item {
@@ -532,16 +449,7 @@
 
     .weight {
         font-family: var(--font-mono);
-        font-size: var(--text-sm);
-    }
-
-    /* Editable Section */
-    .editable-section {
-        background: var(--color-accent-light);
-        margin: 0 calc(var(--space-6) * -1);
-        padding: var(--space-4) var(--space-6);
-        border-radius: 0;
-        border: none;
+        font-size: var(--text-base);
     }
 
     /* Action Buttons */
@@ -554,16 +462,15 @@
         border-top: 1px solid var(--color-border);
     }
 
-    @media (max-width: 768px) {
-        .info-grid,
-        .info-grid.small,
+    @media (max-width: 600px) {
         .pricing-grid,
-        .inventory-grid {
-            grid-template-columns: 1fr 1fr;
+        .inventory-grid,
+        .info-grid {
+            grid-template-columns: 1fr;
         }
 
-        .editable-grid {
-            grid-template-columns: 1fr;
+        .info-item.full-width {
+            grid-column: span 1;
         }
     }
 </style>

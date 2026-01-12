@@ -106,42 +106,6 @@
         </div>
     {:else}
         <div class="settings-grid">
-            <!-- Pricing Settings -->
-            <section class="settings-section">
-                <h2>
-                    <span class="section-icon">💰</span>
-                    Pricing
-                </h2>
-                <div class="settings-group">
-                    <div class="setting-row">
-                        <label for="markup">Default Markup %</label>
-                        <Input
-                            id="markup"
-                            type="number"
-                            bind:value={defaultMarkupPct}
-                            min={0}
-                            max={100}
-                            step={0.5}
-                        />
-                        <span class="setting-hint">Applied to new products</span
-                        >
-                    </div>
-                    <div class="setting-row">
-                        <label for="transport">Transport Cost (£)</label>
-                        <Input
-                            id="transport"
-                            type="number"
-                            bind:value={transportCost}
-                            min={0}
-                            step={0.01}
-                        />
-                        <span class="setting-hint"
-                            >Added to unit cost calculations</span
-                        >
-                    </div>
-                </div>
-            </section>
-
             <!-- Stock Settings -->
             <section class="settings-section">
                 <h2>

@@ -150,6 +150,9 @@ export const availabilitySummary = derived(offerItems, ($items) => ({
     hasUnavailable: $items.some((i) => !i.available),
 }));
 
+// Shipping cost store (user editable)
+export const shippingCost = writable<number>(0);
+
 // Helper function to format offer as text for clipboard
 export function formatOfferAsText(
     items: OfferItem[],

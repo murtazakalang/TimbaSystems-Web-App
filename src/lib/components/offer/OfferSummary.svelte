@@ -8,6 +8,7 @@
         grandTotal,
         availabilitySummary,
         formatOfferAsText,
+        shippingCost,
     } from "$lib/stores/quickOffer";
     import { toast } from "$lib/stores/toastStore";
     import { jsPDF } from "jspdf";
@@ -18,9 +19,17 @@
 
     const count = $derived($itemCount);
     const weight = $derived($totalWeight);
-    const total = $derived($grandTotal);
+    const subtotal = $derived($grandTotal);
+    const shipping = $derived($shippingCost);
+    const total = $derived(subtotal + shipping);
     const availability = $derived($availabilitySummary);
     const items = $derived($offerItems);
+
+    function handleShippingChange(event: Event) {
+        const target = event.target as HTMLInputElement;
+        const value = parseFloat(target.value) || 0;
+        shippingCost.set(value);
+    }
 
     async function handleGeneratePdf() {
         if (count === 0) return;
@@ -240,8 +249,26 @@
             <span class="stat-label">Total Weight</span>
             <span class="stat-value weight">{weight.toFixed(2)} kg</span>
         </div>
-        <div class="stat highlight">
-            <span class="stat-label">Grand Total</span>
+        <div class="stat">
+            <span class="stat-label">Subtotal (VAT excl.)</span>
+            <span class="stat-value">£{subtotal.toFixed(2)}</span>
+        </div>
+        <div class="stat shipping">
+            <span class="stat-label">Shipping Cost (VAT excl.)</span>
+            <div class="shipping-input">
+                <span class="currency">£</span>
+                <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={shipping}
+                    onchange={handleShippingChange}
+                    placeholder="0.00"
+                />
+            </div>
+        </div>
+        <div class="stat highlight primary">
+            <span class="stat-label">Grand Total (VAT excl.)</span>
             <span class="stat-value total">£{total.toFixed(2)}</span>
         </div>
     </div>
@@ -350,6 +377,52 @@
         margin: 0 -12px;
         padding: 12px;
         border-radius: 8px;
+    }
+
+    .stat.highlight.primary {
+        background: var(--color-primary);
+    }
+
+    .stat.highlight.primary .stat-label {
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .stat.highlight.primary .stat-value.total {
+        color: white;
+    }
+
+    .stat.shipping {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .shipping-input {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .shipping-input .currency {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 14px;
+        color: var(--color-text-secondary);
+    }
+
+    .shipping-input input {
+        width: 100px;
+        padding: 6px 10px;
+        border: 1px solid var(--color-border);
+        border-radius: 6px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 14px;
+        text-align: right;
+        transition: all var(--duration-fast) var(--ease-out);
+    }
+
+    .shipping-input input:focus {
+        outline: none;
+        border-color: var(--color-accent);
+        box-shadow: 0 0 0 3px rgba(57, 158, 162, 0.15);
     }
 
     .stat-label {

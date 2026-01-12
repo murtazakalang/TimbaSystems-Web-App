@@ -15,6 +15,8 @@ export interface Product {
     discount2Pct: Decimal;
     unitDiscountedPrice: Decimal;
     transportCost: Decimal;
+    costGBP: Decimal;
+    trueCostGBP: Decimal;
     markupPct: Decimal;
     marginPct: Decimal;
     sellingPriceUnit: Decimal;

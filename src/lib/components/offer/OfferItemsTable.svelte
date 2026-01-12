@@ -37,9 +37,9 @@
                     <tr>
                         <th class="col-code">Code</th>
                         <th class="col-desc">Description</th>
-                        <th class="col-price">Unit Price</th>
+                        <th class="col-price">Selling Price (£)</th>
                         <th class="col-qty">Qty</th>
-                        <th class="col-total">Total</th>
+                        <th class="col-total">Total (VAT excl.)</th>
                         <th class="col-stock">Stock</th>
                         <th class="col-actions"></th>
                     </tr>
