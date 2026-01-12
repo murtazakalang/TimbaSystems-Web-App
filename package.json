@@ -18,6 +18,7 @@
 		"@types/bcrypt": "^6.0.0",
 		"@types/jsonwebtoken": "^9.0.10",
 		"@types/papaparse": "^5.5.1",
+		"@types/pg": "^8.16.0",
 		"svelte": "^5.43.8",
 		"svelte-check": "^4.3.4",
 		"typescript": "^5.9.3",

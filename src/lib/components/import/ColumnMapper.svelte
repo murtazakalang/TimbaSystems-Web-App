@@ -2,29 +2,28 @@
     import { importWizard, isMappingValid } from "$lib/stores/importWizard";
     import type { ImportColumnMapping } from "$lib/types/import";
 
-    // System fields to map, with display names and required status
+    // System fields to map, matching the user's spreadsheet format
     const systemFields: Array<{
         key: keyof ImportColumnMapping;
         label: string;
         required: boolean;
     }> = [
-        { key: "itemCode", label: "Item Code", required: true },
-        { key: "description", label: "Description", required: false },
+        { key: "itemCode", label: "Code", required: true },
         {
-            key: "piecesPerPackage",
-            label: "Pieces per Package",
+            key: "supplierDescription",
+            label: "Supplier Description",
             required: false,
         },
-        { key: "priceList", label: "Price List", required: false },
-        { key: "discount", label: "Discount %", required: false },
-        { key: "discount2", label: "Discount 2 %", required: false },
-        { key: "unitWeight", label: "Unit Weight (kg)", required: false },
-        { key: "boxWeight", label: "Box Weight (kg)", required: false },
-        { key: "brand", label: "Brand", required: false },
-        { key: "productGroup", label: "Product Group", required: false },
-        { key: "unitOfMeasure", label: "Unit of Measure", required: false },
-        { key: "hsCode", label: "HS Code", required: false },
-        { key: "eanCode", label: "EAN Code", required: false },
+        { key: "piecesPerPackage", label: "Unity", required: false },
+        { key: "priceList", label: "Price List (£)", required: false },
+        { key: "discount", label: "Discount%", required: false },
+        { key: "cost", label: "Cost (£)", required: false },
+        { key: "trueCost", label: "True Cost (£)", required: false },
+        { key: "description", label: "Description", required: false },
+        { key: "margin", label: "Margin %", required: false },
+        { key: "sellingPrice", label: "Selling Price (£)", required: false },
+        { key: "unitWeight", label: "Weight (kg)", required: false },
+        { key: "stockQuantity", label: "Stock Quantity", required: false },
     ];
 
     function handleSelectChange(
