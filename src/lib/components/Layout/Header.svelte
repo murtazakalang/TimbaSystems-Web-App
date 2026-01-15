@@ -3,7 +3,9 @@
   Top bar with brand, global search, and user menu
 -->
 <script lang="ts">
+  import { goto } from "$app/navigation";
   import GlobalSearch from "$lib/components/GlobalSearch.svelte";
+  import { authStore } from "$lib/stores/authStore";
 
   let isUserMenuOpen = $state(false);
 
@@ -16,6 +18,11 @@
     if (!target.closest(".user-menu-container")) {
       isUserMenuOpen = false;
     }
+  }
+
+  function handleLogout() {
+    authStore.logout();
+    goto("/login");
   }
 </script>
 
@@ -46,7 +53,9 @@
       <div class="user-dropdown">
         <a href="/settings" class="dropdown-item">⚙️ Settings</a>
         <div class="dropdown-divider"></div>
-        <button class="dropdown-item logout">🚪 Logout</button>
+        <button class="dropdown-item logout" onclick={handleLogout}
+          >🚪 Logout</button
+        >
       </div>
     {/if}
   </div>
