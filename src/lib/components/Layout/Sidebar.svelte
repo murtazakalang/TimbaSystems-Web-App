@@ -1,10 +1,12 @@
 <!-- 
   Sidebar Component
-  Dark navigation sidebar with teal accent states
+  Collapsible dark navigation sidebar with hover expand
 -->
 <script lang="ts">
   import { page } from "$app/stores";
+  import { goto } from "$app/navigation";
   import logo from "$lib/assets/logo.svg";
+  import { authStore } from "$lib/stores/authStore";
 
   interface NavItem {
     href: string;
@@ -23,10 +25,29 @@
     { href: "/settings", label: "Settings", icon: "⚙️" },
   ];
 
-  let { collapsed = false } = $props<{ collapsed?: boolean }>();
+  // Collapsed by default, expand on hover
+  let collapsed = $state(true);
+
+  function handleMouseEnter() {
+    collapsed = false;
+  }
+
+  function handleMouseLeave() {
+    collapsed = true;
+  }
+
+  function handleLogout() {
+    authStore.logout();
+    goto("/login");
+  }
 </script>
 
-<aside class="sidebar" class:collapsed>
+<aside
+  class="sidebar"
+  class:collapsed
+  onmouseenter={handleMouseEnter}
+  onmouseleave={handleMouseLeave}
+>
   <!-- Brand -->
   <div class="brand">
     <img src={logo} alt="Timba Systems" class="brand-logo" />
@@ -43,9 +64,7 @@
         style="animation-delay: {50 + i * 30}ms"
       >
         <span class="nav-icon">{item.icon}</span>
-        {#if !collapsed}
-          <span class="nav-label">{item.label}</span>
-        {/if}
+        <span class="nav-label">{item.label}</span>
       </a>
     {/each}
   </nav>
@@ -53,7 +72,13 @@
   <!-- Divider -->
   <div class="divider"></div>
 
-  <!-- Settings at bottom (only show if not in main nav) -->
+  <!-- Logout Button -->
+  <div class="nav logout-section">
+    <button type="button" class="nav-item logout-btn" onclick={handleLogout}>
+      <span class="nav-icon">🚪</span>
+      <span class="nav-label">Logout</span>
+    </button>
+  </div>
 </aside>
 
 <style>
@@ -83,6 +108,7 @@
     justify-content: center;
     padding: var(--space-4) var(--space-5);
     margin-bottom: var(--space-6);
+    overflow: hidden;
   }
 
   .brand-logo {
@@ -118,6 +144,8 @@
     transition: all var(--duration-fast) var(--ease-out);
     position: relative;
     animation: fadeInUp var(--duration-slow) var(--ease-out) backwards;
+    white-space: nowrap;
+    overflow: hidden;
   }
 
   .nav-item:hover {
@@ -151,8 +179,12 @@
   }
 
   .nav-label {
-    white-space: nowrap;
-    animation: fadeIn var(--duration-fast) var(--ease-out);
+    opacity: 1;
+    transition: opacity var(--duration-fast) var(--ease-out);
+  }
+
+  .collapsed .nav-label {
+    opacity: 0;
   }
 
   /* Divider */
@@ -160,5 +192,24 @@
     height: 1px;
     background: rgba(255, 255, 255, 0.1);
     margin: var(--space-4) var(--space-5);
+  }
+
+  /* Logout Section */
+  .logout-section {
+    flex: 0;
+    padding-bottom: var(--space-4);
+  }
+
+  .logout-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+  }
+
+  .logout-btn:hover {
+    background: rgba(220, 38, 38, 0.15);
+    color: #fca5a5;
   }
 </style>

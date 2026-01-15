@@ -21,18 +21,39 @@
 
     // Local editable state
     let editedMargin: number = $state(25);
+    let editedDiscount: number = $state(0);
     let isSaving = $state(false);
 
-    // Computed selling price based on margin
-    let computedSellingPrice = $derived(() => {
-        if (!$selectedProduct) return 0;
-        const trueCost =
-            Number($selectedProduct.trueCostGBP) ||
-            Number($selectedProduct.costGBP) ||
-            0;
+    // Helper to calculate cost based on discount
+    function calculateCost(priceList: number, unity: number, discount: number): number {
+        const basePrice = priceList * unity;
+        return basePrice * (1 - discount / 100);
+    }
+
+    // Computed values
+    let computedValues = $derived(() => {
+        if (!$selectedProduct) return { cost: 0, trueCost: 0, sellingPrice: 0 };
+
+        const priceList = Number($selectedProduct.priceListGBP || 0);
+        const unity = $selectedProduct.piecesPerPackage || 1;
+        const discount = editedDiscount ?? Number($selectedProduct.discount1Pct) ?? 0;
+        
+        // Calculate Cost
+        const cost = calculateCost(priceList, unity, discount);
+
+        // Calculate True Cost (Cost + Overhead)
+        // Overhead is determined from the original values: trueCost - cost
+        const originalCost = Number($selectedProduct.costGBP) || 0;
+        const originalTrueCost = Number($selectedProduct.trueCostGBP) || originalCost;
+        const overhead = originalTrueCost - originalCost;
+        
+        const trueCost = cost + overhead;
+
+        // Calculate Selling Price
         const margin = editedMargin ?? Number($selectedProduct.marginPct) ?? 25;
-        if (margin >= 100) return trueCost; // Prevent division by zero
-        return trueCost / (1 - margin / 100);
+        const sellingPrice = margin >= 100 ? trueCost : trueCost / (1 - margin / 100);
+
+        return { cost, trueCost, sellingPrice };
     });
 
     // Initialize local state when product changes
@@ -41,6 +62,9 @@
             editedMargin = $selectedProduct.marginPct
                 ? Number($selectedProduct.marginPct)
                 : 25;
+            editedDiscount = $selectedProduct.discount1Pct
+                ? Number($selectedProduct.discount1Pct)
+                : 0;
         }
     });
 
@@ -82,12 +106,25 @@
         isSaving = true;
 
         const updates: Record<string, unknown> = {};
+        const values = computedValues();
 
-        // Only save margin if changed
-        if (editedMargin !== Number($selectedProduct.marginPct)) {
+        // Check for changes
+        const originalMargin = Number($selectedProduct.marginPct);
+        const originalDiscount = Number($selectedProduct.discount1Pct);
+
+        if (editedMargin !== originalMargin) {
             updates.marginPct = editedMargin;
-            // Also update the selling price based on new margin
-            updates.sellingPriceUnit = computedSellingPrice();
+        }
+
+        if (editedDiscount !== originalDiscount) {
+            updates.discount1Pct = editedDiscount;
+            updates.costGBP = Number(values.cost.toFixed(2));
+            updates.trueCostGBP = Number(values.trueCost.toFixed(2));
+        }
+
+        // If either changed, selling price updates
+        if (editedMargin !== originalMargin || editedDiscount !== originalDiscount) {
+            updates.sellingPriceUnit = Number(values.sellingPrice.toFixed(2));
         }
 
         if (Object.keys(updates).length === 0) {
@@ -177,6 +214,16 @@
                     </span>
                 </div>
                 <div class="pricing-item editable">
+                    <label>Discount %</label>
+                    <input
+                        type="number"
+                        class="margin-input"
+                        bind:value={editedDiscount}
+                        min="0"
+                        max="100"
+                    />
+                </div>
+                <div class="pricing-item editable">
                     <label>Margin %</label>
                     <input
                         type="number"
@@ -189,7 +236,7 @@
                 <div class="pricing-item highlight">
                     <label>Selling Price (£)</label>
                     <span class="price-value large"
-                        >{formatPrice(computedSellingPrice())}</span
+                        >{formatPrice(computedValues().sellingPrice)}</span
                     >
                 </div>
             </div>
@@ -351,7 +398,7 @@
     /* Pricing Section */
     .pricing-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
         gap: var(--space-3);
     }
 
